@@ -6,4 +6,7 @@ using System.Collections.Generic;
 public class MapSegmentManager : ScriptableObject
 {
     [SerializeField] private List<MapSegment> mapSegments;
+
+    //Allows access to the list for behavior actions and gizmo display
+    public List<MapSegment> MapSegments {  get { return mapSegments; } }
 }

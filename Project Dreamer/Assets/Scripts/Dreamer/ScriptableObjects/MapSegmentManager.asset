@@ -13,6 +13,15 @@ MonoBehaviour:
   m_Name: MapSegmentManager
   m_EditorClassIdentifier: Assembly-CSharp::MapSegmentManager
   mapSegments:
-  - centerLoc: {x: 0, y: 0, z: 0}
-    radius: 0
-    isActive: 0
+  - centerLoc: {x: 5, y: 0, z: 5}
+    radius: 5
+    isActive: 1
+  - centerLoc: {x: -5, y: 0, z: 5}
+    radius: 4
+    isActive: 1
+  - centerLoc: {x: 5, y: 0, z: -5}
+    radius: 3
+    isActive: 1
+  - centerLoc: {x: -5, y: 0, z: -5}
+    radius: 3.5
+    isActive: 1

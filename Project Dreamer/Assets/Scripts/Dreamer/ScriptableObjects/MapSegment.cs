@@ -6,11 +6,14 @@ using System;
 public class MapSegment
 {
     //The central location of the segment
-    public Vector3 centerLoc;
+    [SerializeField] private Vector3 centerLoc;
+    public Vector3 CenterLoc { get { return centerLoc; } }
 
     //Size of the segment, from the center
-    public float radius;
+    [SerializeField] private float radius;
+    public float Radius { get { return radius; } }
 
     //Is this segment available for pathing?
-    public bool isActive;
+    [SerializeField] private bool isActive;
+    public bool IsActive { get { return isActive; } set { isActive = value; } }
 }
