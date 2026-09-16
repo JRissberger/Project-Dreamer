@@ -34,31 +34,34 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 1079144630413426803
-      type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
+    - rid: 5429190842524893366
+      type: {class: BehaviorGraphModule, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        GUID:
-          m_Value0: 1
-          m_Value1: 0
-        Name: Star
-        m_Value: {fileID: 0}
-    - rid: 1079144630413426804
-      type: {class: 'BlackboardVariable`1[[UnityEngine.Vector3, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
+        AuthoringAssetID:
+          m_Value0: 17623856350662768079
+          m_Value1: 13113374706968415754
+        m_DebugInfo: {fileID: -6570771181140947909}
+        BlackboardReference:
+          rid: 5429190842524893367
+        BlackboardGroupReferences: []
+        Root:
+          rid: 5429190868901298251
+        m_VersionTimestamp: 639251031065492218
+    - rid: 5429190842524893367
+      type: {class: BlackboardReference, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        GUID:
-          m_Value0: 9143336709754313179
-          m_Value1: 10112599410900624254
-        Name: Target Position
-        m_Value: {x: 0, y: 0, z: 0}
-    - rid: 1079144630413426805
-      type: {class: 'BlackboardVariable`1[[System.Int32, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
+        m_Blackboard:
+          rid: 5429190842524893369
+        m_Source: {fileID: -345546281320932669}
+    - rid: 5429190842524893369
+      type: {class: Blackboard, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        GUID:
-          m_Value0: 447781508248316681
-          m_Value1: 3652435816309880067
-        Name: Wander Index
-        m_Value: 0
-    - rid: 1079144630413426807
+        m_Variables:
+        - rid: 5429190868901298252
+        - rid: 5429190868901298253
+        - rid: 5429190868901298254
+        - rid: 5429190868901298255
+    - rid: 5429190868901298251
       type: {class: Start, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         ID:
@@ -72,32 +75,38 @@ MonoBehaviour:
           rid: -2
         Repeat: 1
         AllowMultipleRepeatsPerTick: 0
-    - rid: 5429190842524893366
-      type: {class: BehaviorGraphModule, ns: Unity.Behavior, asm: Unity.Behavior}
+    - rid: 5429190868901298252
+      type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        AuthoringAssetID:
-          m_Value0: 17623856350662768079
-          m_Value1: 13113374706968415754
-        m_DebugInfo: {fileID: -6570771181140947909}
-        BlackboardReference:
-          rid: 5429190842524893367
-        BlackboardGroupReferences: []
-        Root:
-          rid: 1079144630413426807
-        m_VersionTimestamp: 639250762848455758
-    - rid: 5429190842524893367
-      type: {class: BlackboardReference, ns: Unity.Behavior, asm: Unity.Behavior}
+        GUID:
+          m_Value0: 1
+          m_Value1: 0
+        Name: Star
+        m_Value: {fileID: 0}
+    - rid: 5429190868901298253
+      type: {class: 'BlackboardVariable`1[[UnityEngine.Vector3, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        m_Blackboard:
-          rid: 5429190842524893369
-        m_Source: {fileID: -345546281320932669}
-    - rid: 5429190842524893369
-      type: {class: Blackboard, ns: Unity.Behavior, asm: Unity.Behavior}
+        GUID:
+          m_Value0: 9143336709754313179
+          m_Value1: 10112599410900624254
+        Name: Target Position
+        m_Value: {x: 0, y: 0, z: 0}
+    - rid: 5429190868901298254
+      type: {class: 'BlackboardVariable`1[[System.Int32, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        m_Variables:
-        - rid: 1079144630413426803
-        - rid: 1079144630413426804
-        - rid: 1079144630413426805
+        GUID:
+          m_Value0: 447781508248316681
+          m_Value1: 3652435816309880067
+        Name: Wander Index
+        m_Value: 0
+    - rid: 5429190868901298255
+      type: {class: 'BlackboardVariable`1[[MapSegmentManager, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
+      data:
+        GUID:
+          m_Value0: 6358889713828928834
+          m_Value1: 6344712938610088329
+        Name: Map Segments
+        m_Value: {fileID: 11400000, guid: 68282b4e8849fee4c827555403de2a72, type: 2}
 --- !u!114 &-345546281320932669
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -110,7 +119,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c02bb70996b49eba31d0c206e28da24, type: 3}
   m_Name: StarBehavior Blackboard
   m_EditorClassIdentifier: Unity.Behavior::Unity.Behavior.RuntimeBlackboardAsset
-  VersionTimestamp: 639250761957648609
+  VersionTimestamp: 639251031065040381
   AssetID:
     m_Value0: 17623856350662768079
     m_Value1: 13113374706968415754
@@ -119,6 +128,7 @@ MonoBehaviour:
     - rid: 5429190842524893371
     - rid: 5429190842524893427
     - rid: 1079144630413426745
+    - rid: 5429190868901298244
   m_SharedBlackboardVariableGuids: []
   references:
     version: 2
@@ -147,6 +157,14 @@ MonoBehaviour:
           m_Value1: 10112599410900624254
         Name: Target Position
         m_Value: {x: 0, y: 0, z: 0}
+    - rid: 5429190868901298244
+      type: {class: 'BlackboardVariable`1[[MapSegmentManager, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
+      data:
+        GUID:
+          m_Value0: 6358889713828928834
+          m_Value1: 6344712938610088329
+        Name: Map Segments
+        m_Value: {fileID: 11400000, guid: 68282b4e8849fee4c827555403de2a72, type: 2}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,7 +181,7 @@ MonoBehaviour:
   m_Description: Full behavior outline for Star (Dreamer)
   m_Nodes:
   - rid: 5429190842524893372
-  m_VersionTimestamp: 639250762848455758
+  m_VersionTimestamp: 639251031065492218
   m_SerializedVersion: 3
   m_DebugInfo: {fileID: -6570771181140947909}
   m_RuntimeGraph: {fileID: -724796982978882635}
@@ -245,7 +263,8 @@ MonoBehaviour:
   - rid: 5429190842524893374
   - rid: 5429190842524893423
   - rid: 1079144630413426734
-  m_VersionTimestamp: 639250761957648609
+  - rid: 5429190868901298238
+  m_VersionTimestamp: 639251031065040381
   m_CommandBuffer:
     m_Commands: []
   m_RuntimeBlackboardAsset: {fileID: -345546281320932669}
@@ -282,3 +301,13 @@ MonoBehaviour:
         IsExposed: 1
         m_IsShared: 0
         m_Value: {x: 0, y: 0, z: 0}
+    - rid: 5429190868901298238
+      type: {class: 'TypedVariableModel`1[[MapSegmentManager, Assembly-CSharp]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
+      data:
+        ID:
+          m_Value0: 6358889713828928834
+          m_Value1: 6344712938610088329
+        Name: Map Segments
+        IsExposed: 1
+        m_IsShared: 0
+        m_Value: {fileID: 11400000, guid: 68282b4e8849fee4c827555403de2a72, type: 2}

@@ -584,6 +584,7 @@ MonoBehaviour:
   m_Graph: {fileID: -724796982978882635, guid: cf35c4c9f98394f40ace717fd110fcb5, type: 2}
   m_BlackboardVariableOverridesList:
   - rid: 5429190842524893479
+  - rid: 5429190868901298250
   m_OriginalGraph: {fileID: 0}
   m_IsInitialised: 0
   m_IsStarted: 0
@@ -598,6 +599,14 @@ MonoBehaviour:
           m_Value1: 0
         Name: Star
         m_Value: {fileID: 1720141701}
+    - rid: 5429190868901298250
+      type: {class: 'BlackboardVariable`1[[MapSegmentManager, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
+      data:
+        GUID:
+          m_Value0: 6358889713828928834
+          m_Value1: 6344712938610088329
+        Name: Map Segments
+        m_Value: {fileID: 11400000, guid: 68282b4e8849fee4c827555403de2a72, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
