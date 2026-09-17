@@ -1,15 +1,17 @@
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Splines;
 
 public class BaseThrowing : MonoBehaviour
 {
-    [Tooltip("The camera, used for mouse position calculations. If null, defaults to the main camera (Camera.main, determined on Start()).")]
+    [Tooltip("The camera, used for mouse position calculations. If unset, defaults to the main camera (Camera.main, determined on Start()).")]
     [SerializeField] private Camera _camera = null;
 
     [Tooltip("The position of the \"hand\" where the item is held and thrown from, relative to this object's transform.")]
     [SerializeField] private Vector3 _handOffset = Vector3.zero;
+
+    [Tooltip("The number of segments to break the throwing path into when calculating if it is blocked. Higher numbers are more precise but may reduce performance.")]
+    [SerializeField] private int _splineRaycastSegments = 10;
 
     [Header("Throwing Graphic Settings")]
     [Tooltip("The prefab to display as the target marker when aiming. The prefab should be oriented such that the +Z axis points into the surface the marker is on.")]
@@ -17,9 +19,6 @@ public class BaseThrowing : MonoBehaviour
 
     [Tooltip("How much the marker should \"hover\" over the surface it is on, to avoid z-fighting issues.")]
     [SerializeField] private float _targetMarkerHover = 0.01f;
-
-    [Tooltip("The number of segments to break the throwing path into when calculating if it is blocked. Higher numbers are more precise but may reduce performance.")]
-    [SerializeField] private int _splineRaycastSegments = 10;
 
     [Tooltip("The thickness of the curved line displayed when throwing.")]
     [SerializeField] private float _splineDisplayWidth = 0.01f;
@@ -30,6 +29,7 @@ public class BaseThrowing : MonoBehaviour
     private InputAction _aimAction;
     private InputAction _throwAction;
     private GameObject _activeMarker = null;
+    private GameObject _heldItem = null;
     private SplineContainer _splineContainer;
     private LineRenderer _lineRenderer;
 
@@ -50,23 +50,75 @@ public class BaseThrowing : MonoBehaviour
 
     private void Update()
     {
-        if (_aimAction.IsPressed())
+        if (_heldItem)
         {
-            RaycastHit? clickedInfo = GetClickedRaycast(Mouse.current.position.ReadValue(), LayerMask.GetMask(LayerMask.LayerToName(0)));
-            if (clickedInfo.HasValue)
+            if (_aimAction.IsPressed())
             {
-                DrawThrowMarker(clickedInfo.Value.point, clickedInfo.Value.normal);
-                bool validSpline = CreateThrowSpline(clickedInfo.Value.point, clickedInfo.Value.normal);
+                RaycastHit? clickedInfo = GetClickedRaycast(Mouse.current.position.ReadValue(), LayerMask.GetMask(LayerMask.LayerToName(0)));
+                if (clickedInfo.HasValue)
+                {
+                    DrawThrowMarker(clickedInfo.Value.point, clickedInfo.Value.normal);
+                    bool validSpline = CreateThrowSpline(clickedInfo.Value.point, clickedInfo.Value.normal);
+                }
+                else
+                {
+                    ClearThrowGraphics();
+                }
             }
             else
             {
                 ClearThrowGraphics();
             }
+
+            /*
+            if (_throwAction.WasPressedThisFrame())
+            {
+                //TODO: Throwing
+            }
+            */
+        }
+    }
+
+    /// <summary>
+    /// Gets the currently held item.
+    /// </summary>
+    /// <returns>The held item.</returns>
+    public GameObject GetHeldItem()
+    {
+        return _heldItem;
+    }
+
+    /// <summary>
+    /// Sets the currently held item, parenting it to this object's Transform.
+    /// If an item is already being held, it will be dropped in favor of the new one.
+    /// </summary>
+    /// <param name="item">The GameObject to set as the held item.</param>
+    public void SetHeldItem(GameObject item)
+    {
+        if (item.CompareTag("Throwable"))
+        {
+            if (GetHeldItem())
+            {
+                DropItem();
+            }
+
+            _heldItem = item;
+            _heldItem.transform.SetParent(transform, false);
+            _heldItem.transform.localPosition = _handOffset;
         }
         else
         {
-            ClearThrowGraphics();
+            Debug.LogWarning("Tried to call SetHeldItem on an item not tagged as \"Throwable\"! This item will be ignored.");
         }
+    }
+
+    /// <summary>
+    /// Drops the currently held item, unparenting it from this object's Transform and putting it at the scene root.
+    /// </summary>
+    public void DropItem()
+    {
+        _heldItem.transform.SetParent(null, true);
+        _heldItem = null;
     }
 
     /// <summary>
@@ -114,7 +166,7 @@ public class BaseThrowing : MonoBehaviour
     /// <param name="position">Where the object is being thrown</param>
     /// <param name="normal">The normal of the surface the object is being thrown at</param>
     /// <returns>False if the throw path is blocked; true otherwise</returns>
-    private bool CreateThrowSpline(Vector3 position, Vector3 normal)
+    public bool CreateThrowSpline(Vector3 position, Vector3 normal)
     {
         //Create the spline
         if (_splineContainer.Splines.Count == 0)
@@ -144,8 +196,8 @@ public class BaseThrowing : MonoBehaviour
             Vector3 raycastStart = spline.EvaluatePosition(progressStart);
             Vector3 raycastEnd = spline.EvaluatePosition(progressEnd);
             //Spline is in local space; raycast uses world space
-            raycastStart += transform.position + _handOffset;
-            raycastEnd += transform.position + _handOffset;
+            raycastStart += transform.position;
+            raycastEnd += transform.position;
 
             Vector3 raycastRay = raycastEnd - raycastStart;
 
@@ -168,7 +220,7 @@ public class BaseThrowing : MonoBehaviour
             float progress = i / (float)_splineDisplaySegments;
             if (isBlocked && progress > blockedAtProgress)
             {
-                _lineRenderer.SetPosition(i, blockedAtPoint - transform.position - _handOffset);
+                _lineRenderer.SetPosition(i, blockedAtPoint - transform.position);
                 break;
             }
             else
@@ -187,5 +239,13 @@ public class BaseThrowing : MonoBehaviour
             Destroy(_activeMarker);
         }
         _lineRenderer.enabled = false;
+    }
+
+    public void ThrowItem()
+    {
+        if (_heldItem)
+        {
+
+        }
     }
 }
