@@ -249,12 +249,13 @@ MonoBehaviour:
   _camera: {fileID: 0}
   _handOffset: {x: 1, y: 0.5, z: 0.25}
   _curveRaycastSegments: 10
-  _throwCurveHeight: 1
+  _throwCurveHeight: 5
+  _throwSpeed: 1
   _targetMarkerPrefab: {fileID: 8064065595831018745, guid: 33cbea4f5a37b554ba609a6a27c5b2c1, type: 3}
   _targetMarkerHover: 0.01
   _curveDisplayWidth: 0.01
   _curveDisplaySegments: 50
-  debugItem: {fileID: 1729789260}
+  _debugItem: {fileID: 1729789260}
 --- !u!1 &1129586979
 GameObject:
   m_ObjectHideFlags: 0

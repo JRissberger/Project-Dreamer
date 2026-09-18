@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Splines;
@@ -15,6 +16,10 @@ public class BaseThrowing : MonoBehaviour
 
     [Tooltip("Controls the height of the curve that a thrown object travels along. Not 1-to-1 with Unity units; this controls a specific point defining a Bezier curve, and the final height of the parabola will be lower than this.")]
     [SerializeField] private float _throwCurveHeight = 1.0f;
+
+    [Tooltip("How fast an object travels when thrown.")]
+    [SerializeField] private float _throwSpeed = 1.0f;
+
     [Header("Throwing Graphic Settings")]
     [Tooltip("The prefab to display as the target marker when aiming. The prefab should be oriented such that the +Z axis points into the surface the marker is on.")]
     [SerializeField] private GameObject _targetMarkerPrefab = null;
@@ -31,7 +36,7 @@ public class BaseThrowing : MonoBehaviour
     private InputAction _aimAction;
     private InputAction _throwAction;
     private GameObject _activeMarker = null;
-    private BezierCurve throwCurve;
+    private BezierCurve _throwCurve;
     private GameObject _heldItem = null;
     private LineRenderer _lineRenderer;
 
@@ -63,8 +68,33 @@ public class BaseThrowing : MonoBehaviour
                 RaycastHit? clickedInfo = GetClickedRaycast(Mouse.current.position.ReadValue(), LayerMask.GetMask(LayerMask.LayerToName(0)));
                 if (clickedInfo.HasValue)
                 {
-                    DrawThrowMarker(clickedInfo.Value.point, clickedInfo.Value.normal);
-                    bool validCurve = CreateThrowCurve(clickedInfo.Value.point, clickedInfo.Value.normal);
+                    Vector3 clickedPoint = clickedInfo.Value.point;
+                    Vector3 clickedNormal = clickedInfo.Value.normal;
+                    DrawThrowMarker(clickedPoint, clickedNormal);
+                    bool validCurve;
+
+                    //Prevent throwing at a wall that is facing away from the thrower
+                    //This is done by comparing the surface normal to the vector from the hand to the target point
+                    //If these vectors are facing the same way, the dot product will be positive
+                    Vector3 dotLeft = clickedPoint - (transform.position + _handOffset);
+                    Vector3 dotRight = clickedNormal;
+                    //Ignore upwards component - throwing to a higher floor is possible due to gravity
+                    dotLeft.y = Mathf.Min(dotLeft.y, 0);
+                    dotRight.y = Mathf.Min(dotRight.y, 0);
+                    if (Vector3.Dot(dotLeft, dotRight) > 0)
+                    {
+                        validCurve = false;
+                    }
+                    else
+                    {
+                        validCurve = CreateThrowCurve(clickedPoint, clickedNormal);
+                    }
+
+                    if (validCurve && _throwAction.WasPressedThisFrame())
+                    {
+                        ThrowItem();
+                        ClearThrowGraphics();
+                    }
                 }
                 else
                 {
@@ -75,13 +105,6 @@ public class BaseThrowing : MonoBehaviour
             {
                 ClearThrowGraphics();
             }
-
-            /*
-            if (_throwAction.WasPressedThisFrame())
-            {
-                //TODO: Throwing
-            }
-            */
         }
     }
 
@@ -178,15 +201,24 @@ public class BaseThrowing : MonoBehaviour
         Vector3 startPos = _handOffset;
         Vector3 endPos = position - transform.position;
 
+        Collider heldCollider = _heldItem.GetComponent<Collider>();
+        float heldRadius = 0;
+        if (heldCollider)
+        {
+            Vector3 heldSize = heldCollider.bounds.extents;
+            heldRadius = Mathf.Max(heldSize.x, heldSize.y, heldSize.z);
+            //Offset the ending position by the extent of the bounding box, so the spherecast doesn't clip into the surface being thrown at
+            endPos += normal * heldRadius;
+        }
+
         //TODO: Look closer at this formula if the throwing curve is too unrealistic
         // Right now it just takes the point between the start and end and slides it upwards
         Vector3 midPos = (startPos + endPos) / 2 + Vector3.up * _throwCurveHeight;
-        throwCurve = new BezierCurve(startPos, midPos, endPos);
+        _throwCurve = new BezierCurve(startPos, midPos, endPos);
 
         bool isBlocked = false;
         //These two variables are used when drawing the line if it is blocked
         float blockedAtProgress = 0;
-        Vector3 blockedAtPoint = Vector3.zero;
 
         //Check if the curve is blocked by raycasting between points on it
         for (int i = 0; i < _curveRaycastSegments; i++)
@@ -196,8 +228,8 @@ public class BaseThrowing : MonoBehaviour
             //Stop a bit short of the surface we're throwing at, so it isn't detected as blocking the throw
             progressEnd = Mathf.Min(progressEnd, 0.99f);
 
-            Vector3 raycastStart = CurveUtility.EvaluatePosition(throwCurve, progressStart);
-            Vector3 raycastEnd = CurveUtility.EvaluatePosition(throwCurve, progressEnd);
+            Vector3 raycastStart = CurveUtility.EvaluatePosition(_throwCurve, progressStart);
+            Vector3 raycastEnd = CurveUtility.EvaluatePosition(_throwCurve, progressEnd);
             //Curve is in local space; raycast uses world space
             raycastStart += transform.position;
             raycastEnd += transform.position;
@@ -205,11 +237,23 @@ public class BaseThrowing : MonoBehaviour
             Vector3 raycastRay = raycastEnd - raycastStart;
 
             RaycastHit hitInfo;
-            if (Physics.Raycast(raycastStart, raycastRay, out hitInfo, Vector3.Magnitude(raycastRay), LayerMask.GetMask(LayerMask.LayerToName(0))))
+
+            bool raycastResult = false;
+            
+            if (heldCollider)
+            {
+                raycastResult = Physics.SphereCast(raycastStart, heldRadius, raycastRay, out hitInfo, Vector3.Magnitude(raycastRay), LayerMask.GetMask(LayerMask.LayerToName(0)));
+            }
+            else
+            {
+                raycastResult = Physics.Raycast(raycastStart, raycastRay, out hitInfo, Vector3.Magnitude(raycastRay), LayerMask.GetMask(LayerMask.LayerToName(0)));
+            }
+
+            if (raycastResult)
             {
                 isBlocked = true;
                 blockedAtProgress = progressStart;
-                blockedAtPoint = hitInfo.point;
+                Debug.Log(raycastEnd);
                 break;
             }
         }
@@ -219,22 +263,24 @@ public class BaseThrowing : MonoBehaviour
         _lineRenderer.positionCount = 0;
         for (int i = 0; i < _curveDisplaySegments + 1; i++)
         {
-            _lineRenderer.positionCount++;
             float progress = i / (float)_curveDisplaySegments;
             if (isBlocked && progress > blockedAtProgress)
             {
-                _lineRenderer.SetPosition(i, blockedAtPoint - transform.position);
                 break;
             }
             else
             {
-                _lineRenderer.SetPosition(i, CurveUtility.EvaluatePosition(throwCurve, progress));
+                _lineRenderer.positionCount++;
+                _lineRenderer.SetPosition(i, CurveUtility.EvaluatePosition(_throwCurve, progress));
             }
         }
 
         return !isBlocked;
     }
 
+    /// <summary>
+    /// Clears the displayed graphics for throwing an item (the marker and the curved path).
+    /// </summary>
     private void ClearThrowGraphics()
     {
         if (_activeMarker)
@@ -244,11 +290,23 @@ public class BaseThrowing : MonoBehaviour
         _lineRenderer.enabled = false;
     }
 
-    public void ThrowItem()
+    protected void ThrowItem()
     {
         if (_heldItem)
         {
-
+            GameObject throwItem = _heldItem;
+            DropItem();
+            StartCoroutine(ThrowItemCoroutine(throwItem, _throwCurve));
         }
+    }
+
+    private IEnumerator ThrowItemCoroutine(GameObject item, BezierCurve throwCurve)
+    {
+        for (float i = 0; i < 1; i += Time.deltaTime * _throwSpeed)
+        {
+            item.transform.position = (Vector3)CurveUtility.EvaluatePosition(throwCurve, i) + transform.position;
+            yield return new WaitForEndOfFrame();
+        }
+        item.transform.position = (Vector3)throwCurve.P3 + transform.position;
     }
 }
