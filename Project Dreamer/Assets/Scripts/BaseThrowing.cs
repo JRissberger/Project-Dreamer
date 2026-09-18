@@ -11,8 +11,10 @@ public class BaseThrowing : MonoBehaviour
     [SerializeField] private Vector3 _handOffset = Vector3.zero;
 
     [Tooltip("The number of segments to break the throwing path into when calculating if it is blocked. Higher numbers are more precise but may reduce performance.")]
-    [SerializeField] private int _splineRaycastSegments = 10;
+    [SerializeField] private int _curveRaycastSegments = 10;
 
+    [Tooltip("Controls the height of the curve that a thrown object travels along. Not 1-to-1 with Unity units; this controls a specific point defining a Bezier curve, and the final height of the parabola will be lower than this.")]
+    [SerializeField] private float _throwCurveHeight = 1.0f;
     [Header("Throwing Graphic Settings")]
     [Tooltip("The prefab to display as the target marker when aiming. The prefab should be oriented such that the +Z axis points into the surface the marker is on.")]
     [SerializeField] private GameObject _targetMarkerPrefab = null;
@@ -21,17 +23,20 @@ public class BaseThrowing : MonoBehaviour
     [SerializeField] private float _targetMarkerHover = 0.01f;
 
     [Tooltip("The thickness of the curved line displayed when throwing.")]
-    [SerializeField] private float _splineDisplayWidth = 0.01f;
+    [SerializeField] private float _curveDisplayWidth = 0.01f;
 
     [Tooltip("The number of segments to draw when drawing the curved line indicating a thrown object's path. Higher numbers look better but may reduce performance.")]
-    [SerializeField] private int _splineDisplaySegments = 50;
+    [SerializeField] private int _curveDisplaySegments = 50;
 
     private InputAction _aimAction;
     private InputAction _throwAction;
     private GameObject _activeMarker = null;
+    private BezierCurve throwCurve;
     private GameObject _heldItem = null;
-    private SplineContainer _splineContainer;
     private LineRenderer _lineRenderer;
+
+    //For assigning a held item, since picking things up isn't implemented yet
+    //[SerializeField] private GameObject _debugItem;
 
     private void Start()
     {
@@ -42,10 +47,11 @@ public class BaseThrowing : MonoBehaviour
 
         _aimAction = InputSystem.actions.FindAction("Aim");
         _throwAction = InputSystem.actions.FindAction("Throw");
-        _splineContainer = gameObject.AddComponent<SplineContainer>();
         _lineRenderer = gameObject.AddComponent<LineRenderer>();
         _lineRenderer.useWorldSpace = false;
-        _lineRenderer.widthMultiplier = _splineDisplayWidth;
+        _lineRenderer.widthMultiplier = _curveDisplayWidth;
+
+        //SetHeldItem(_debugItem);
     }
 
     private void Update()
@@ -58,7 +64,7 @@ public class BaseThrowing : MonoBehaviour
                 if (clickedInfo.HasValue)
                 {
                     DrawThrowMarker(clickedInfo.Value.point, clickedInfo.Value.normal);
-                    bool validSpline = CreateThrowSpline(clickedInfo.Value.point, clickedInfo.Value.normal);
+                    bool validCurve = CreateThrowCurve(clickedInfo.Value.point, clickedInfo.Value.normal);
                 }
                 else
                 {
@@ -160,42 +166,39 @@ public class BaseThrowing : MonoBehaviour
     }
 
     /// <summary>
-    /// Creates the spline that indicates a thrown object's path, and draws it to the player.
+    /// Creates the curve that indicates a thrown object's path, and draws it to the player.
     /// 
     /// </summary>
     /// <param name="position">Where the object is being thrown</param>
     /// <param name="normal">The normal of the surface the object is being thrown at</param>
     /// <returns>False if the throw path is blocked; true otherwise</returns>
-    public bool CreateThrowSpline(Vector3 position, Vector3 normal)
+    public bool CreateThrowCurve(Vector3 position, Vector3 normal)
     {
-        //Create the spline
-        if (_splineContainer.Splines.Count == 0)
-        {
-            _splineContainer.AddSpline();
-        }
-        Spline spline = _splineContainer.Spline;
-        spline.Clear();
-        BezierKnot startKnot = new BezierKnot(_handOffset, Vector3.zero, Vector3.up);
-        spline.Add(startKnot);
-        BezierKnot endKnot = new BezierKnot(position - transform.position, normal, Vector3.zero);
-        spline.Add(endKnot);
+        //Create the Bezier curve
+        Vector3 startPos = _handOffset;
+        Vector3 endPos = position - transform.position;
+
+        //TODO: Look closer at this formula if the throwing curve is too unrealistic
+        // Right now it just takes the point between the start and end and slides it upwards
+        Vector3 midPos = (startPos + endPos) / 2 + Vector3.up * _throwCurveHeight;
+        throwCurve = new BezierCurve(startPos, midPos, endPos);
 
         bool isBlocked = false;
         //These two variables are used when drawing the line if it is blocked
         float blockedAtProgress = 0;
         Vector3 blockedAtPoint = Vector3.zero;
 
-        //Check if the spline is blocked by raycasting between points on it
-        for (int i = 0; i < _splineRaycastSegments; i++)
+        //Check if the curve is blocked by raycasting between points on it
+        for (int i = 0; i < _curveRaycastSegments; i++)
         {
-            float progressStart = i / (float)_splineRaycastSegments;
-            float progressEnd = (i + 1) / (float)_splineRaycastSegments;
+            float progressStart = i / (float)_curveRaycastSegments;
+            float progressEnd = (i + 1) / (float)_curveRaycastSegments;
             //Stop a bit short of the surface we're throwing at, so it isn't detected as blocking the throw
             progressEnd = Mathf.Min(progressEnd, 0.99f);
 
-            Vector3 raycastStart = spline.EvaluatePosition(progressStart);
-            Vector3 raycastEnd = spline.EvaluatePosition(progressEnd);
-            //Spline is in local space; raycast uses world space
+            Vector3 raycastStart = CurveUtility.EvaluatePosition(throwCurve, progressStart);
+            Vector3 raycastEnd = CurveUtility.EvaluatePosition(throwCurve, progressEnd);
+            //Curve is in local space; raycast uses world space
             raycastStart += transform.position;
             raycastEnd += transform.position;
 
@@ -211,13 +214,13 @@ public class BaseThrowing : MonoBehaviour
             }
         }
 
-        //Draw a line along the spline using the LineRenderer
+        //Draw a line along the curve using the LineRenderer
         _lineRenderer.enabled = true;
         _lineRenderer.positionCount = 0;
-        for (int i = 0; i < _splineDisplaySegments + 1; i++)
+        for (int i = 0; i < _curveDisplaySegments + 1; i++)
         {
             _lineRenderer.positionCount++;
-            float progress = i / (float)_splineDisplaySegments;
+            float progress = i / (float)_curveDisplaySegments;
             if (isBlocked && progress > blockedAtProgress)
             {
                 _lineRenderer.SetPosition(i, blockedAtPoint - transform.position);
@@ -225,7 +228,7 @@ public class BaseThrowing : MonoBehaviour
             }
             else
             {
-                _lineRenderer.SetPosition(i, spline.EvaluatePosition(progress));
+                _lineRenderer.SetPosition(i, CurveUtility.EvaluatePosition(throwCurve, progress));
             }
         }
 
