@@ -12,14 +12,25 @@ public partial class UpdateWanderIndexAction : Action
     [SerializeReference] public BlackboardVariable<MapSegmentManager> MapSegmentManager;
     protected override Status OnStart()
     {
-        //Increments the wander index by 1
-        WanderIndex.Value = WanderIndex.Value += 1;
-        //Checks if outside list bounds, rolls over to 0 if so
-        if (MapSegmentManager.Value.MapSegments.Count <= WanderIndex.Value)
+        //Can only set index as an active node
+        bool activeNode = false;
+
+        while (!activeNode)
         {
-            WanderIndex.Value = 0;
+            //Increments the wander index by 1
+            WanderIndex.Value = WanderIndex.Value += 1;
+
+            //Checks if outside list bounds, rolls over to 0 if so
+            if (MapSegmentManager.Value.MapSegments.Count <= WanderIndex.Value)
+            {
+                WanderIndex.Value = 0;
+            }
+
+            //Is the new map segment an active node?
+            activeNode = MapSegmentManager.Value.MapSegments[WanderIndex.Value].IsActive;
         }
-        Debug.Log($"Wander Index: {WanderIndex.Value}");
+        
+        
         return Status.Running;
     }
 
