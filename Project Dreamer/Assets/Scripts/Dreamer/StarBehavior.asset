@@ -45,8 +45,8 @@ MonoBehaviour:
           rid: 5429190842524893367
         BlackboardGroupReferences: []
         Root:
-          rid: 5429190868901298251
-        m_VersionTimestamp: 639251031065492218
+          rid: 5429190952321548358
+        m_VersionTimestamp: 639254209066024628
     - rid: 5429190842524893367
       type: {class: BlackboardReference, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -61,20 +61,6 @@ MonoBehaviour:
         - rid: 5429190868901298253
         - rid: 5429190868901298254
         - rid: 5429190868901298255
-    - rid: 5429190868901298251
-      type: {class: Start, ns: Unity.Behavior, asm: Unity.Behavior}
-      data:
-        ID:
-          m_Value0: 12761425551378567716
-          m_Value1: 13079916492482517440
-        Graph:
-          rid: 5429190842524893366
-        m_Parent:
-          rid: -2
-        m_Child:
-          rid: -2
-        Repeat: 1
-        AllowMultipleRepeatsPerTick: 0
     - rid: 5429190868901298252
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -107,6 +93,32 @@ MonoBehaviour:
           m_Value1: 6344712938610088329
         Name: Map Segments
         m_Value: {fileID: 11400000, guid: 68282b4e8849fee4c827555403de2a72, type: 2}
+    - rid: 5429190952321548358
+      type: {class: Start, ns: Unity.Behavior, asm: Unity.Behavior}
+      data:
+        ID:
+          m_Value0: 12761425551378567716
+          m_Value1: 13079916492482517440
+        Graph:
+          rid: 5429190842524893366
+        m_Parent:
+          rid: -2
+        m_Child:
+          rid: 5429190952321548359
+        Repeat: 1
+        AllowMultipleRepeatsPerTick: 0
+    - rid: 5429190952321548359
+      type: {class: FindWanderPositionAction, ns: , asm: Assembly-CSharp}
+      data:
+        ID:
+          m_Value0: 9683219676071991882
+          m_Value1: 2436079981034643115
+        Graph:
+          rid: 5429190842524893366
+        m_Parent:
+          rid: 5429190952321548358
+        Star:
+          rid: 5429190868901298252
 --- !u!114 &-345546281320932669
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,7 +193,8 @@ MonoBehaviour:
   m_Description: Full behavior outline for Star (Dreamer)
   m_Nodes:
   - rid: 5429190842524893372
-  m_VersionTimestamp: 639251031065492218
+  - rid: 5429190952321548351
+  m_VersionTimestamp: 639254209066024628
   m_SerializedVersion: 3
   m_DebugInfo: {fileID: -6570771181140947909}
   m_RuntimeGraph: {fileID: -724796982978882635}
@@ -201,6 +214,21 @@ MonoBehaviour:
       m_Value0: 3335272451348827663
       m_Value1: 11549843281177505721
     Variables: []
+    NamedChildren: []
+    IsPlaceholder: 0
+  - Name: FindWanderPosition
+    Story: '[Star] finds a wander position in the current map segment.'
+    RuntimeTypeString: FindWanderPositionAction, Assembly-CSharp, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    RuntimeTypeID:
+      m_Value0: 13353620176012513522
+      m_Value1: 9965912208163677032
+    Variables:
+    - Name: Star
+      Type:
+        m_SerializableType: UnityEngine.GameObject, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+      Tooltip: 
     NamedChildren: []
     IsPlaceholder: 0
   m_Blackboards: []
@@ -243,7 +271,75 @@ MonoBehaviour:
         m_IsFloating: 0
         m_NodeModel:
           rid: 5429190842524893372
+        m_Connections:
+        - rid: 5429190952321548352
+    - rid: 5429190952321548351
+      type: {class: ActionNodeModel, ns: Unity.Behavior, asm: Unity.Behavior.Authoring}
+      data:
+        Position: {x: 189.43352, y: 73.10281}
+        ID:
+          m_Value0: 9683219676071991882
+          m_Value1: 2436079981034643115
+        Parents: []
+        PortModels:
+        - rid: 5429190952321548352
+        - rid: 5429190952321548353
+        NodeType:
+          m_SerializableType: FindWanderPositionAction, Assembly-CSharp, Version=0.0.0.0,
+            Culture=neutral, PublicKeyToken=null
+        NodeTypeID:
+          m_Value0: 13353620176012513522
+          m_Value1: 9965912208163677032
+        m_FieldValues:
+        - rid: 5429190952321548354
+    - rid: 5429190952321548352
+      type: {class: PortModel, ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
+      data:
+        m_Name: InputPort
+        m_PortDataFlowType: 0
+        m_IsFloating: 0
+        m_NodeModel:
+          rid: 5429190952321548351
+        m_Connections:
+        - rid: 5429190842524893373
+    - rid: 5429190952321548353
+      type: {class: PortModel, ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
+      data:
+        m_Name: OutputPort
+        m_PortDataFlowType: 1
+        m_IsFloating: 0
+        m_NodeModel:
+          rid: 5429190952321548351
         m_Connections: []
+    - rid: 5429190952321548354
+      type: {class: BehaviorGraphNodeModel/FieldModel, ns: Unity.Behavior, asm: Unity.Behavior.Authoring}
+      data:
+        FieldName: Star
+        Type:
+          m_SerializableType: UnityEngine.GameObject, UnityEngine.CoreModule, Version=0.0.0.0,
+            Culture=neutral, PublicKeyToken=null
+        LocalValue:
+          rid: 5429190952321548355
+        LinkedVariable:
+          rid: 5429190952321548356
+    - rid: 5429190952321548355
+      type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
+      data:
+        GUID:
+          m_Value0: 0
+          m_Value1: 0
+        Name: 
+        m_Value: {fileID: 0}
+    - rid: 5429190952321548356
+      type: {class: 'TypedVariableModel`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
+      data:
+        ID:
+          m_Value0: 1
+          m_Value1: 0
+        Name: Star
+        IsExposed: 1
+        m_IsShared: 0
+        m_Value: {fileID: 0}
 --- !u!114 &2626942374702574231
 MonoBehaviour:
   m_ObjectHideFlags: 1
