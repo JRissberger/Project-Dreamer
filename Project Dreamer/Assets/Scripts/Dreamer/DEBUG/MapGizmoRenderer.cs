@@ -21,10 +21,23 @@ public class MapGizmoRenderer : MonoBehaviour
         {
             MapSegment segment = segmentManager.MapSegments[i];
 
+            //Set up GUI style/content and declare
+            GUIContent number = new GUIContent("");
+            GUIStyle style = new GUIStyle();
+            style.normal.textColor = Color.black;
+            style.fontSize = 18;
+            style.fontStyle = FontStyle.Bold;
+
+
             //Only draw if the segment is currently active
             if (segment.IsActive)
             {
+                //Show radius
                 UnityEditor.Handles.DrawSolidDisc(segment.CenterLoc, Vector3.up, segment.Radius);
+
+                //Number in list
+                number = new GUIContent($"{i}");
+                UnityEditor.Handles.Label(segment.CenterLoc, number, style);
             }
         }
 #endif
