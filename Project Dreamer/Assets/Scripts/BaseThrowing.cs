@@ -1,15 +1,19 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.Events;
 using UnityEngine.Splines;
 
+/// <summary>
+/// Contains base functionality for throwing objects.
+/// Should not be used directly.
+/// See DreamerThrowing for a basic implementation with a hook for throwing an object.
+/// </summary>
 public class BaseThrowing : MonoBehaviour
 {
-    [Tooltip("The camera, used for mouse position calculations. If unset, defaults to the main camera (Camera.main, determined on Start()).")]
-    [SerializeField] private Camera _camera = null;
+    [Header("Throwing Settings")]
 
     [Tooltip("The position of the \"hand\" where the item is held and thrown from, relative to this object's transform.")]
-    [SerializeField] private Vector3 _handOffset = Vector3.zero;
+    [SerializeField] protected Vector3 _handOffset = Vector3.zero;
 
     [Tooltip("The number of segments to break the throwing path into when calculating if it is blocked. Higher numbers are more precise but may reduce performance.")]
     [SerializeField] private int _curveRaycastSegments = 10;
@@ -20,92 +24,30 @@ public class BaseThrowing : MonoBehaviour
     [Tooltip("How fast an object travels when thrown.")]
     [SerializeField] private float _throwSpeed = 1.0f;
 
-    [Header("Throwing Graphic Settings")]
-    [Tooltip("The prefab to display as the target marker when aiming. The prefab should be oriented such that the +Z axis points into the surface the marker is on.")]
-    [SerializeField] private GameObject _targetMarkerPrefab = null;
+    [Header("Curve Display")]
 
-    [Tooltip("How much the marker should \"hover\" over the surface it is on, to avoid z-fighting issues.")]
-    [SerializeField] private float _targetMarkerHover = 0.01f;
+    [Tooltip("Whether to display the curve that displays the path of a thrown item.")]
+    [SerializeField] private bool _drawCurve = false;
 
-    [Tooltip("The thickness of the curved line displayed when throwing.")]
+    [Tooltip("The thickness of the curved line that is optionally displayed when throwing.")]
     [SerializeField] private float _curveDisplayWidth = 0.01f;
 
-    [Tooltip("The number of segments to draw when drawing the curved line indicating a thrown object's path. Higher numbers look better but may reduce performance.")]
+    [Tooltip("The number of segments to draw for the curved line that is optionally displayed when throwing. Higher numbers look better but may reduce performance.")]
     [SerializeField] private int _curveDisplaySegments = 50;
 
-    private InputAction _aimAction;
-    private InputAction _throwAction;
-    private GameObject _activeMarker = null;
-    private BezierCurve _throwCurve;
-    private GameObject _heldItem = null;
+    //Called when an object is finished being thrown and lands on the ground (or another surface).
+    [System.NonSerialized] public UnityEvent _throwLandEvent = new UnityEvent();
+
+    private BezierCurve? _throwCurve;
+    protected GameObject _heldItem = null;
     private LineRenderer _lineRenderer;
 
-    //For assigning a held item, since picking things up isn't implemented yet
-    //[SerializeField] private GameObject _debugItem;
-
-    private void Start()
+    protected virtual void Start()
     {
-        if (_camera == null)
-        {
-            _camera = Camera.main;
-        }
-
-        _aimAction = InputSystem.actions.FindAction("Aim");
-        _throwAction = InputSystem.actions.FindAction("Throw");
         _lineRenderer = gameObject.AddComponent<LineRenderer>();
         _lineRenderer.useWorldSpace = false;
         _lineRenderer.widthMultiplier = _curveDisplayWidth;
-
-        //SetHeldItem(_debugItem);
-    }
-
-    private void Update()
-    {
-        if (_heldItem)
-        {
-            if (_aimAction.IsPressed())
-            {
-                RaycastHit? clickedInfo = GetClickedRaycast(Mouse.current.position.ReadValue(), LayerMask.GetMask(LayerMask.LayerToName(0)));
-                if (clickedInfo.HasValue)
-                {
-                    Vector3 clickedPoint = clickedInfo.Value.point;
-                    Vector3 clickedNormal = clickedInfo.Value.normal;
-                    DrawThrowMarker(clickedPoint, clickedNormal);
-                    bool validCurve;
-
-                    //Prevent throwing at a wall that is facing away from the thrower
-                    //This is done by comparing the surface normal to the vector from the hand to the target point
-                    //If these vectors are facing the same way, the dot product will be positive
-                    Vector3 dotLeft = clickedPoint - (transform.position + _handOffset);
-                    Vector3 dotRight = clickedNormal;
-                    //Ignore upwards component - throwing to a higher floor is possible due to gravity
-                    dotLeft.y = Mathf.Min(dotLeft.y, 0);
-                    dotRight.y = Mathf.Min(dotRight.y, 0);
-                    if (Vector3.Dot(dotLeft, dotRight) > 0)
-                    {
-                        validCurve = false;
-                    }
-                    else
-                    {
-                        validCurve = CreateThrowCurve(clickedPoint, clickedNormal);
-                    }
-
-                    if (validCurve && _throwAction.WasPressedThisFrame())
-                    {
-                        ThrowItem();
-                        ClearThrowGraphics();
-                    }
-                }
-                else
-                {
-                    ClearThrowGraphics();
-                }
-            }
-            else
-            {
-                ClearThrowGraphics();
-            }
-        }
+        _lineRenderer.enabled = false;
     }
 
     /// <summary>
@@ -151,46 +93,7 @@ public class BaseThrowing : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns the world position the player clicked on with the mouse,
-    /// raycasting from it based on the BaseThrowing script's selected camera.
-    /// </summary>
-    /// <param name="mousePosition">The position of the mouse on screen.</param>
-    /// <param name="clickableLayers">A mask defining which layers will be checked.</param>
-    /// <returns>The world position that was clicked on, or null if no object is found.</returns>
-    private RaycastHit? GetClickedRaycast(Vector2 mousePosition, LayerMask clickableLayers)
-    {
-        Ray screenRay = Camera.main.ScreenPointToRay(mousePosition);
-        RaycastHit hitInfo;
-        if (Physics.Raycast(screenRay, out hitInfo, Mathf.Infinity, clickableLayers))
-        {
-            return hitInfo;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Places the throwing target marker on a surface, facing a certain direction.
-    /// The marker hovers slightly above the surface to avoid z-fighting issues.
-    /// If a marker already exists, it will be moved there; otherwise one will be created.
-    /// </summary>
-    /// <param name="position">Position of the throwing target marker</param>
-    /// <param name="normal">Direction of the marker (for example, upwards if it's on the floor)</param>
-    private void DrawThrowMarker(Vector3 position, Vector3 normal) {
-        if (_activeMarker == null)
-        {
-            _activeMarker = Instantiate(_targetMarkerPrefab);
-        }
-        Vector3 finalPosition = position + normal * _targetMarkerHover;
-        _activeMarker.transform.position = finalPosition;
-        _activeMarker.transform.rotation = Quaternion.LookRotation(normal);
-    }
-
-    /// <summary>
-    /// Creates the curve that indicates a thrown object's path, and draws it to the player.
-    /// 
+    /// Creates and checks the curve that indicates a thrown object's path.
     /// </summary>
     /// <param name="position">Where the object is being thrown</param>
     /// <param name="normal">The normal of the surface the object is being thrown at</param>
@@ -208,6 +111,7 @@ public class BaseThrowing : MonoBehaviour
             Vector3 heldSize = heldCollider.bounds.extents;
             heldRadius = Mathf.Max(heldSize.x, heldSize.y, heldSize.z);
             //Offset the ending position by the extent of the bounding box, so the spherecast doesn't clip into the surface being thrown at
+            //TODO: Need a better way to check this! Right now, thrown objects with oblong dimensions might stop short of their target.
             endPos += normal * heldRadius;
         }
 
@@ -228,8 +132,8 @@ public class BaseThrowing : MonoBehaviour
             //Stop a bit short of the surface we're throwing at, so it isn't detected as blocking the throw
             progressEnd = Mathf.Min(progressEnd, 0.99f);
 
-            Vector3 raycastStart = CurveUtility.EvaluatePosition(_throwCurve, progressStart);
-            Vector3 raycastEnd = CurveUtility.EvaluatePosition(_throwCurve, progressEnd);
+            Vector3 raycastStart = CurveUtility.EvaluatePosition(_throwCurve.Value, progressStart);
+            Vector3 raycastEnd = CurveUtility.EvaluatePosition(_throwCurve.Value, progressEnd);
             //Curve is in local space; raycast uses world space
             raycastStart += transform.position;
             raycastEnd += transform.position;
@@ -253,53 +157,73 @@ public class BaseThrowing : MonoBehaviour
             {
                 isBlocked = true;
                 blockedAtProgress = progressStart;
-                Debug.Log(raycastEnd);
                 break;
             }
         }
 
         //Draw a line along the curve using the LineRenderer
-        _lineRenderer.enabled = true;
-        _lineRenderer.positionCount = 0;
-        for (int i = 0; i < _curveDisplaySegments + 1; i++)
+        if (_drawCurve)
         {
-            float progress = i / (float)_curveDisplaySegments;
-            if (isBlocked && progress > blockedAtProgress)
+            _lineRenderer.enabled = true;
+            _lineRenderer.positionCount = 0;
+            for (int i = 0; i < _curveDisplaySegments + 1; i++)
             {
-                break;
-            }
-            else
-            {
-                _lineRenderer.positionCount++;
-                _lineRenderer.SetPosition(i, CurveUtility.EvaluatePosition(_throwCurve, progress));
+                float progress = i / (float)_curveDisplaySegments;
+                if (isBlocked && progress > blockedAtProgress)
+                {
+                    break;
+                }
+                else
+                {
+                    _lineRenderer.positionCount++;
+                    _lineRenderer.SetPosition(i, CurveUtility.EvaluatePosition(_throwCurve.Value, progress));
+                }
             }
         }
+        
 
         return !isBlocked;
     }
 
     /// <summary>
-    /// Clears the displayed graphics for throwing an item (the marker and the curved path).
+    /// Clears the throwing curve and hides its associated line renderer.
     /// </summary>
-    private void ClearThrowGraphics()
+    protected virtual void ResetThrow()
     {
-        if (_activeMarker)
-        {
-            Destroy(_activeMarker);
-        }
+        _throwCurve = null;
         _lineRenderer.enabled = false;
     }
 
+    /// <summary>
+    /// Throws the currently held item along the throwing curve generated by CreateThrowCurve().
+    /// Does not check for the path being blocked (this is handled by CreateThrowCurve()).
+    /// Does nothing and logs a warning if there is no held item or no current throwing curve.
+    /// </summary>
     protected void ThrowItem()
     {
-        if (_heldItem)
+        if (_heldItem && _throwCurve.HasValue)
         {
             GameObject throwItem = _heldItem;
             DropItem();
-            StartCoroutine(ThrowItemCoroutine(throwItem, _throwCurve));
+            StartCoroutine(ThrowItemCoroutine(throwItem, _throwCurve.Value));
+            ResetThrow();
+        }
+        else if (!_heldItem)
+        {
+            Debug.LogWarning("ThrowItem() was called without any held item! This call will be ignored.");
+        }
+        else
+        {
+            Debug.LogWarning("ThrowItem() was called without a throw curve set! This call will be ignored.");
         }
     }
 
+    /// <summary>
+    /// Coroutine for moving the thrown item along a path.
+    /// </summary>
+    /// <param name="item">The item to throw.</param>
+    /// <param name="throwCurve">The curve to throw the item along.</param>
+    /// <returns></returns>
     private IEnumerator ThrowItemCoroutine(GameObject item, BezierCurve throwCurve)
     {
         for (float i = 0; i < 1; i += Time.deltaTime * _throwSpeed)
@@ -308,5 +232,6 @@ public class BaseThrowing : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
         item.transform.position = (Vector3)throwCurve.P3 + transform.position;
+        _throwLandEvent.Invoke();
     }
 }
