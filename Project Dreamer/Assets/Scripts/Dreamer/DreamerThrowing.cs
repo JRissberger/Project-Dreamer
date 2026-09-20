@@ -9,7 +9,7 @@ public class DreamerThrowing : BaseThrowing
         base.Start();
 
         SetHeldItem(_debugItem);
-        Debug.Log(ThrowItemAtTry(new Vector3(-4, 0, 4), Vector3.up));
+        ThrowItemAtTry(new Vector3(-4, 0, 4), Vector3.up); //throwing path is blocked in the test scene; this should not throw the item
     }
 
     /// <summary>
@@ -26,14 +26,15 @@ public class DreamerThrowing : BaseThrowing
 
     /// <summary>
     /// Attempts to throw the currently held item at the given position and surface normal.
-    /// If the throw is obstructed or out of range, the item will not be thrown.
+    /// If the throw is obstructed, out of range, or otherwise invalid, the item will not be thrown.
     /// </summary>
     /// <param name="position">The position to throw the item at.</param>
     /// <param name="normal">The normal of the surface the item is being thrown at.</param>
+    /// <param name="maxRange">The maximum allowed range of the throw, measuring from the thrower's position to the position parameter</param>
     /// <returns>True if the throw was successful, false if it was blocked or otherwise invalid.</returns>
-    public bool ThrowItemAtTry(Vector3 position, Vector3 normal)
+    public bool ThrowItemAtTry(Vector3 position, Vector3 normal, float maxRange = Mathf.Infinity)
     {
-        if (CreateThrowCurve(position, normal))
+        if (Vector3.Distance(position, transform.position) <= maxRange && CreateThrowCurve(position, normal))
         {
             ThrowItem();
             return true;

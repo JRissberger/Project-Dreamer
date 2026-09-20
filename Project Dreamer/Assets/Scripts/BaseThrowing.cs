@@ -94,6 +94,8 @@ public class BaseThrowing : MonoBehaviour
 
     /// <summary>
     /// Creates and checks the curve that indicates a thrown object's path.
+    /// If the object has a collider attached, its collision along the path will be (approximately) checked.
+    /// If no collider is attached, the object is treated as a single point.
     /// </summary>
     /// <param name="position">Where the object is being thrown</param>
     /// <param name="normal">The normal of the surface the object is being thrown at</param>
@@ -105,14 +107,15 @@ public class BaseThrowing : MonoBehaviour
         Vector3 endPos = position - transform.position;
 
         Collider heldCollider = _heldItem.GetComponent<Collider>();
-        float heldRadius = 0;
+        Vector3 heldExtents = Vector3.zero;
         if (heldCollider)
         {
-            Vector3 heldSize = heldCollider.bounds.extents;
-            heldRadius = Mathf.Max(heldSize.x, heldSize.y, heldSize.z);
-            //Offset the ending position by the extent of the bounding box, so the spherecast doesn't clip into the surface being thrown at
-            //TODO: Need a better way to check this! Right now, thrown objects with oblong dimensions might stop short of their target.
-            endPos += normal * heldRadius;
+            heldExtents = heldCollider.bounds.extents;
+            //Offset the ending position based on how far the object's collider extends in the direction opposite the surface normal
+            //Extent in a direction is approximated using Collider.ClosestPoint() with a far away point in that direction
+            //This is to prevent the collision-checking BoxCast from clipping into the floor or wall being thrown at
+            float directionalSize = Vector3.Distance(heldCollider.ClosestPoint(_heldItem.transform.position - normal * 100.0f), _heldItem.transform.position);
+            endPos += normal * directionalSize;
         }
 
         //TODO: Look closer at this formula if the throwing curve is too unrealistic
@@ -124,7 +127,7 @@ public class BaseThrowing : MonoBehaviour
         //These two variables are used when drawing the line if it is blocked
         float blockedAtProgress = 0;
 
-        //Check if the curve is blocked by raycasting between points on it
+        //Check if the curve is blocked by raycasting (or boxcasting, for an object with collision) between points on the curve
         for (int i = 0; i < _curveRaycastSegments; i++)
         {
             float progressStart = i / (float)_curveRaycastSegments;
@@ -146,7 +149,7 @@ public class BaseThrowing : MonoBehaviour
             
             if (heldCollider)
             {
-                raycastResult = Physics.SphereCast(raycastStart, heldRadius, raycastRay, out hitInfo, Vector3.Magnitude(raycastRay), LayerMask.GetMask(LayerMask.LayerToName(0)));
+                raycastResult = Physics.BoxCast(raycastStart, heldExtents, raycastRay, out hitInfo, Quaternion.LookRotation(normal), Vector3.Magnitude(raycastRay), LayerMask.GetMask(LayerMask.LayerToName(0)));
             }
             else
             {
