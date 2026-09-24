@@ -88,8 +88,11 @@ public class BaseThrowing : MonoBehaviour
     /// </summary>
     public void DropItem()
     {
-        _heldItem.transform.SetParent(null, true);
-        _heldItem = null;
+        if (_heldItem)
+        {
+            _heldItem.transform.SetParent(null, true);
+            _heldItem = null;
+        }
     }
 
     /// <summary>
@@ -100,7 +103,7 @@ public class BaseThrowing : MonoBehaviour
     /// <param name="position">Where the object is being thrown</param>
     /// <param name="normal">The normal of the surface the object is being thrown at</param>
     /// <returns>False if the throw path is blocked; true otherwise</returns>
-    public bool CreateThrowCurve(Vector3 position, Vector3 normal)
+    protected bool CreateThrowCurve(Vector3 position, Vector3 normal)
     {
         //Create the Bezier curve
         Vector3 startPos = _handOffset;
