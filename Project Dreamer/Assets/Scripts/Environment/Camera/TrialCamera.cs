@@ -7,7 +7,7 @@ public class TrialCamera : MonoBehaviour
 {
     [SerializeField] Vector3 cam3Displacement = new Vector3(11, 9, 0);
     CinemachineSplineDolly spline;
-    bool moving;
+    public bool transitioning;
     int goal = 0;
     float startPos;
     float time = 0;
@@ -21,7 +21,7 @@ public class TrialCamera : MonoBehaviour
 
     void Update()
     {
-        if (moving)
+        if (transitioning)
         {
             time += Time.deltaTime * (1/timeToMove);
             float t = time * time / (2.0f * ((time * time) - time) + 1.0f);
@@ -31,7 +31,7 @@ public class TrialCamera : MonoBehaviour
 
             // If camera has reached the knot (finish transition)
             if (Mathf.Max(spline.CameraPosition, goal) - Mathf.Min(spline.CameraPosition, goal) <= 0.005) { 
-                moving = false; 
+                transitioning = false; 
                 time = 0;
                 Debug.Log("Reached the end, goal:" + goal + ", position:" + spline.CameraPosition);
                 spline.CameraPosition = goal;
@@ -42,7 +42,7 @@ public class TrialCamera : MonoBehaviour
 
     public void MoveTo(int index, float t)
     {
-        moving = true;
+        transitioning = true;
         startPos = spline.CameraPosition;
 
         if (t > 0)

@@ -632,12 +632,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrialPlayerMovement
   cam: {fileID: 2083722784}
-  lookAts:
-  - {fileID: 747979904}
-  - {fileID: 1983047158}
-  - {fileID: 204088253}
-  movement: 0
-  speed: 1.5
+  lookAts: []
+  speed: 0.5
 --- !u!114 &239677819
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1548,7 +1544,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrialCamera
   cam3Displacement: {x: 11, y: 9, z: 0}
-  transitioning: 0
 --- !u!114 &2083722789
 MonoBehaviour:
   m_ObjectHideFlags: 0
