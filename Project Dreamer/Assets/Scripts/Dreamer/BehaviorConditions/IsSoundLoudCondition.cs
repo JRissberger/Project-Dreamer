@@ -16,7 +16,7 @@ public partial class IsSoundLoudCondition : Condition
         if (Sound.Value.SoundType == SoundType.Loud) { 
             return true; 
         }
-        Debug.Log("Not loud sound");
+
         return false;
     }
 

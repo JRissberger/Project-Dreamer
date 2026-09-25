@@ -38,7 +38,7 @@ public partial class SoundHeardCondition : Condition
 
             //Update blackboard with target sound
             TargetSound.Value = closestSound;
-            Debug.Log(closestSound);
+
             return true;
 
         }
