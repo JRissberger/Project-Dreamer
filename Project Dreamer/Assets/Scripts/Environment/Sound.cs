@@ -28,14 +28,11 @@ public class Sound : MonoBehaviour
 
         //Is sound in range
         float distance = Vector3.Distance(transform.position, dreamer.transform.position);
-        Debug.Log(distance);
+
         if (distance < 10)
         {
-            Debug.Log("in range");
-
             //Add this sound to the dreamer's list
             soundManager.GetComponent<SoundManager>().HeardSounds.Add(this);
-            Debug.Log(soundManager.GetComponent<SoundManager>().HeardSounds);
         }
     }
 

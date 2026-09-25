@@ -5,7 +5,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 [Serializable, Unity.Properties.GeneratePropertyBag]
-[Condition(name: "Sound Heard", story: "Sound heard?", category: "Conditions", id: "0d54f36f5442cb9cf2faf000615d9f0f")]
+[Condition(name: "Sound Heard", story: "Sound heard? [Star] [SoundManager] [TargetSound]", category: "Conditions", id: "0d54f36f5442cb9cf2faf000615d9f0f")]
 public partial class SoundHeardCondition : Condition
 {
     [SerializeReference] public BlackboardVariable<SoundManager> SoundManager;
@@ -38,6 +38,7 @@ public partial class SoundHeardCondition : Condition
 
             //Update blackboard with target sound
             TargetSound.Value = closestSound;
+            Debug.Log(closestSound);
             return true;
 
         }
