@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class SoundManager : MonoBehaviour
 {
     //Holds a list of current heard sounds for the behavior tree to access.
+        //Note. Would this make more sense to be attached to Star?? Something to consider.
     public List<Sound> HeardSounds = new List<Sound>();
 
     //Default sound prefab
@@ -33,7 +34,7 @@ public class SoundManager : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hitResult, Mathf.Infinity))
             {
                 newSoundPos = hitResult.point;
-                SpawnSound(newSoundPos, SoundType.Loud);
+                SpawnSound(newSoundPos, SoundType.Loud, 3);
             }
         }
 
@@ -44,22 +45,27 @@ public class SoundManager : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hitResult, Mathf.Infinity))
             {
                 newSoundPos = hitResult.point;
-                SpawnSound(newSoundPos, SoundType.Soft);
+                SpawnSound(newSoundPos, SoundType.Soft, 3);
             }
         }
     }
 
     //Places a sound at a given location and assigns a type to it
-    void SpawnSound(Vector3 pos, SoundType type)
+    void SpawnSound(Vector3 pos, SoundType type, float audibleRange)
     {
         //Spawn sound prefab
         GameObject newSound = Instantiate(soundPrefab, pos, Quaternion.identity);
+        Sound sound = newSound.GetComponent<Sound>();
 
         //Assign type
             //IMPORTANT: As of right now this is separate since Sound still inherits from MonoBehavior
             //Might change so type is part of the constructor--need to check if that impacts anything else though
-        newSound.GetComponent<Sound>().SoundType = type;
+        sound.SoundType = type;
 
         //Assign manager reference
+        sound.SoundManager = this;
+
+        //Set audible range
+        sound.UpdateAudibleRange(audibleRange);
     }
 }
