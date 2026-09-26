@@ -19,6 +19,8 @@ public partial class SoundHeardCondition : Condition
         //Are there current sounds in hearing range?
         if (soundList.Count > 0)
         {
+            Debug.Log(soundList.Count);
+
             Sound closestSound = soundList[0];
             float distance = Mathf.Infinity;
 

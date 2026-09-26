@@ -19,11 +19,20 @@ public class Sound : MonoBehaviour
     public SoundManager SoundManager { set { soundManager = value; } }
 
     //Bool for if it's persistent or not
+    private bool isPersistent = false;
+    public bool IsPersistent { get { return isPersistent; } set { isPersistent = value; } }
+
     //Timer for duration of how long it should be around
+    private float timer = 0;
+    public float Timer { get { return timer; } set { timer = value; } }
 
     void Update()
     {
         //Call timer update if not persistent
+        if (!isPersistent)
+        {
+            UpdateTimer();
+        }
     }
 
     //Adjusts the audible range of the sound (modifying trigger radius)
@@ -65,6 +74,17 @@ public class Sound : MonoBehaviour
     //If it's at or below 0, destroy object (remove from manager list first)
     //NOTE: how to handle if a sound ends as Star's moving towards it? Need to check if BB saves a copy or a reference. Could cause null issue
     //Would the sound need to know if it's being targeted?
+    private void UpdateTimer()
+    {
+        timer -= Time.deltaTime;
+
+        //Destroy self if timer is at 0
+        if (timer <= 0)
+        {
+            soundManager.HeardSounds.Remove(this);
+            Destroy(this.gameObject);
+        }
+    }
 
     //Are we having the actual sound object play a noise?
     //If so, method here for data surrounding playing said noise

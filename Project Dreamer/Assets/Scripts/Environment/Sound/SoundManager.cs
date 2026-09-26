@@ -34,7 +34,7 @@ public class SoundManager : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hitResult, Mathf.Infinity))
             {
                 newSoundPos = hitResult.point;
-                SpawnSound(newSoundPos, SoundType.Loud, 3);
+                SpawnSound(newSoundPos, SoundType.Loud, 5, 0.5f);
             }
         }
 
@@ -45,13 +45,13 @@ public class SoundManager : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hitResult, Mathf.Infinity))
             {
                 newSoundPos = hitResult.point;
-                SpawnSound(newSoundPos, SoundType.Soft, 3);
+                SpawnSound(newSoundPos, SoundType.Soft, 5, 0.5f);
             }
         }
     }
 
     //Places a sound at a given location and assigns a type to it
-    void SpawnSound(Vector3 pos, SoundType type, float audibleRange)
+    void SpawnSound(Vector3 pos, SoundType type, float audibleRange, float duration)
     {
         //Spawn sound prefab
         GameObject newSound = Instantiate(soundPrefab, pos, Quaternion.identity);
@@ -67,5 +67,10 @@ public class SoundManager : MonoBehaviour
 
         //Set audible range
         sound.UpdateAudibleRange(audibleRange);
+
+        //Set timer
+        sound.Timer = duration;
+
+        //TODO: persistent or not
     }
 }
