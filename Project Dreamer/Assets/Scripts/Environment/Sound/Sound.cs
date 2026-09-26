@@ -25,7 +25,6 @@ public class Sound : MonoBehaviour
     //Bool for if it's persistent or not
     //Timer for duration of how long it should be around
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         //TODO: better to assign via manager when spawned
@@ -49,7 +48,7 @@ public class Sound : MonoBehaviour
 
     void Update()
     {
-        //Call timer update
+        //Call timer update if not persistent
     }
 
     //Method--adjust trigger radius
@@ -71,4 +70,7 @@ public class Sound : MonoBehaviour
         //If it's at or below 0, destroy object (remove from manager list first)
         //NOTE: how to handle if a sound ends as Star's moving towards it? Need to check if BB saves a copy or a reference. Could cause null issue
             //Would the sound need to know if it's being targeted?
+
+    //Are we having the actual sound object play a noise?
+        //If so, method here for data surrounding playing said noise
 }
