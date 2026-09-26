@@ -9,10 +9,30 @@ using Unity.Properties;
 public partial class AvoidSoundAction : Action
 {
     [SerializeReference] public BlackboardVariable<Vector3> Location;
-    [SerializeReference] public BlackboardVariable<GameObject> Sound;
+    [SerializeReference] public BlackboardVariable<Sound> Sound;
+    [SerializeReference] public BlackboardVariable<GameObject> Star;
+    [SerializeReference] public BlackboardVariable<float> RunDistance;
 
     protected override Status OnStart()
     {
+        //Find most efficient direction to put distance between Star and the sound
+
+        //Direction vector opposite of the loud sound
+        Vector3 soundDir = Sound.Value.gameObject.transform.position - Star.Value.transform.position;
+
+        //Normalize and invert 
+        Vector3 runDir = Vector3.Normalize(soundDir) * -1;
+
+        //Normalized, calc actual distance on top of this
+        runDir = runDir * RunDistance.Value;
+
+            //Probably want a little bit of angle variation for realism's sake
+
+            //Potentially a speed increase for Star to show they're running?
+
+        //Update target location
+        Location.Value = runDir;
+
         return Status.Running;
     }
 
