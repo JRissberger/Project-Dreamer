@@ -19,7 +19,6 @@ public partial class AvoidSoundAction : Action
 
         //Direction vector opposite of the loud sound
         Vector3 soundDir = Sound.Value.gameObject.transform.position - Star.Value.transform.position;
-        Debug.Log(soundDir);
 
         //Normalize and invert 
         Vector3 runDir = Vector3.Normalize(soundDir) * -1;

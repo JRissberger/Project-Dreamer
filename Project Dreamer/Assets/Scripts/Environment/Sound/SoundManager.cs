@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.InputSystem;
 
 public class SoundManager : MonoBehaviour
 {
@@ -11,15 +12,31 @@ public class SoundManager : MonoBehaviour
         //TODO: Keep an eye on this and confirm if it's needed
     private List<Sound> AllSounds = new List<Sound>();
 
+    //DEBUG
+    Mouse mouse = null;
+
     void Start()
     {
-
+        //DEBUG
+        mouse = Mouse.current;
     }
 
     void Update()
     {
         
+
+        if (mouse.leftButton.wasPressedThisFrame)
+        {
+            Debug.Log("left click");
+        }
+
+        if (mouse.rightButton.wasPressedThisFrame)
+        {
+            Debug.Log("right click");
+        }
     }
+
+    //TEMP DEBUG, DETECTING MOUSE CLICKS
 
     //Places a sound at a given location and assigns a type to it
     void SpawnSound(Vector3 pos, SoundType type)
