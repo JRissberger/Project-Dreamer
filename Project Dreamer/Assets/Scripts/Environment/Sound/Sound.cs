@@ -8,8 +8,6 @@ public enum SoundType
     None //Fallback
 }
 
-//Might be better to not have it branch off monogame, just so we can have a constructor with the enum.
-//Would have to move range calc to sound manager (reasonable! and probably better!) (I lied it might stay here)
 public class Sound : MonoBehaviour
 {
     [SerializeField] private SoundType soundType = SoundType.None;
@@ -18,13 +16,41 @@ public class Sound : MonoBehaviour
     private SoundManager soundManager;
     public SoundManager SoundManager { set { soundManager = value; } }
 
-    //Bool for if it's persistent or not
+    private AudioSource audioSource;
+    [Tooltip("Audio clip to play if this is a loud sound")]
+    [SerializeField] private AudioClip audioClipLoud;
+    [Tooltip("Audio clip to play if this is a soft sound")]
+    [SerializeField] private AudioClip audioClipSoft;
+
+    [Tooltip("The visual effect that indicates this sound's range")]
+    [SerializeField] private GameObject effect;
+    [Tooltip("Material for the sound's visual effect (loud sound)")]
+    [SerializeField] private Material materialLoud;
+    [Tooltip("Material for the sound's visual effect (soft sound)")]
+    [SerializeField] private Material materialSoft;
+
+    //Is the sound persistent
     private bool isPersistent = false;
     public bool IsPersistent { get { return isPersistent; } set { isPersistent = value; } }
 
     //Timer for duration of how long it should be around
     private float timer = 0;
     public float Timer { get { return timer; } set { timer = value; } }
+
+    private void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+        PlayAudio();
+
+        if (soundType == SoundType.Loud)
+        {
+            effect.GetComponent<MeshRenderer>().material = materialLoud;
+        }
+        else if (soundType == SoundType.Soft)
+        {
+            effect.GetComponent<MeshRenderer>().material = materialSoft;
+        }
+    }
 
     void Update()
     {
@@ -41,12 +67,13 @@ public class Sound : MonoBehaviour
         //Get spherecollider, update radius
         SphereCollider collider = this.GetComponent<SphereCollider>();
         collider.radius = range;
+
+        //Double range for the effect because its scale is based on diameter, not radius
+        effect.transform.localScale = new Vector3(range * 2, range * 2, range * 2);
     }
 
 
-    //On trigger enter
-    //Check if it's Star (could use tag or just check object directly? tag makes more sense though)
-    //Add this sound to the heard sounds list on manager
+    //Adds sound to heard list if star enters range
     private void OnTriggerEnter(Collider other)
     {
 
@@ -69,11 +96,7 @@ public class Sound : MonoBehaviour
         }
     }
 
-    //Update timer
-    // -deltatime from timer
-    //If it's at or below 0, destroy object (remove from manager list first)
-    //NOTE: how to handle if a sound ends as Star's moving towards it? Need to check if BB saves a copy or a reference. Could cause null issue
-    //Would the sound need to know if it's being targeted?
+    //Update timer, destroy object when timer runs out
     private void UpdateTimer()
     {
         timer -= Time.deltaTime;
@@ -86,6 +109,16 @@ public class Sound : MonoBehaviour
         }
     }
 
-    //Are we having the actual sound object play a noise?
-    //If so, method here for data surrounding playing said noise
+    //Play the audio for this sound (loud or soft)
+    private void PlayAudio()
+    {
+        if (soundType == SoundType.Loud)
+        {
+            audioSource.PlayOneShot(audioClipLoud);
+        }
+        else if (soundType == SoundType.Soft)
+        {
+            audioSource.PlayOneShot(audioClipSoft);
+        }
+    }
 }
